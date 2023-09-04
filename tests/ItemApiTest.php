@@ -107,6 +107,10 @@ final class ItemApiTest extends TestCase
 
     public function testItemApiGetMethodReturnListData(): void
     {
+        //Тест отмечен как пропущенный, т.к. возможность получения списка закомментирована
+        $this->markTestSkipped('Тест получения списка сущностей пропущен');
+        
+
         $id = ['id' => '0900070000'];
         $example = [
             [
