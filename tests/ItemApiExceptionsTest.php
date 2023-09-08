@@ -7,7 +7,6 @@ use Granal1\RestfulPhp\Exceptions\DBException;
 /**
  * @covers Granal1\RestfulPhp\api\ItemApi
  * @uses Granal1\RestfulPhp\api\Item
- * @uses Granal1\RestfulPhp\api\Validation
  * @uses Granal1\RestfulPhp\api\Database
  * @uses Granal1\RestfulPhp\api\ItemApi
  * @uses Granal1\RestfulPhp\api\SourceApi
@@ -90,6 +89,7 @@ final class ItemApiExceptionsTest extends TestCase
             `history` json DEFAULT NULL,
             `created_at` timestamp NULL DEFAULT NULL,
             `updated_at` timestamp NULL DEFAULT NULL,
+            `deleted_at` timestamp NULL DEFAULT NULL,
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 

@@ -2,17 +2,23 @@
 
 namespace Granal1\RestfulPhp\api;
 
+use Granal1\RestfulPhp\Exceptions\ValidationException;
+
 class Item 
 {
-    public function __construct(
-        private int $id, 
-        private ?string $name, 
-        private ?string $phone, 
-        private string $key, 
-        private string $created_at, 
-        private string $updated_at,
-        private ?string $history
-    ){
+    private ?int $id = null;
+    private ?string $name = null; 
+    private ?string $phone = null; 
+    private string $key = '';
+    private ?string $history = null;
+    private ?string $created_at = null; 
+    private ?string $updated_at = null;
+    private ?string $deleted_at = null;
+    private array $rules = [];
+
+    public function __construct()
+    {
+        $this->rules = require dirname(__DIR__, 2) . '/config/itemRules.php';
     }
 
     
@@ -45,8 +51,11 @@ class Item
      *
      * @return  self
      */ 
-    public function setId($id)
+    public function setId(int $id)
     {
+        if (!empty($id) && !preg_match($this->rules['id'], $id)) {
+            throw new ValidationException('id = ' . $id . ' - uncorrect; ', 400);
+        }        
         $this->id = $id;
 
         return $this;
@@ -67,8 +76,11 @@ class Item
      *
      * @return  self
      */ 
-    public function setName($name)
+    public function setName(string $name)
     {
+        if (!empty($name) && !preg_match($this->rules['name'], $name)) {
+            throw new ValidationException('name = ' . $name . ' - uncorrect; ', 400);
+        } 
         $this->name = $name;
 
         return $this;
@@ -89,8 +101,11 @@ class Item
      *
      * @return  self
      */ 
-    public function setPhone($phone)
+    public function setPhone(?string $phone)
     {
+        if (!empty($phone) && !preg_match($this->rules['phone'], $phone)) {
+            throw new ValidationException('phone = ' . $phone . ' - uncorrect; ', 400);
+        } 
         $this->phone = $phone;
 
         return $this;
@@ -111,8 +126,12 @@ class Item
      *
      * @return  self
      */ 
-    public function setKey($key)
+    public function setKey(string $key)
     {
+        //не должен быть пустым
+        if (!preg_match($this->rules['key'], $key)) {
+            throw new ValidationException('key = ' . $key . ' - uncorrect; ', 400);
+        } 
         $this->key = $key;
 
         return $this;
@@ -133,8 +152,11 @@ class Item
      *
      * @return  self
      */ 
-    public function setHistory($history)
+    public function setHistory(?string $history)
     {
+        if (!empty($history) && !preg_match($this->rules['history'], $history)) {
+            throw new ValidationException('history = ' . $history . ' - uncorrect; ', 400);
+        } 
         $this->history = $history;
 
         return $this;
@@ -155,8 +177,11 @@ class Item
      *
      * @return  self
      */ 
-    public function setCreated_at($created_at)
+    public function setCreated_at(string $created_at)
     {
+        if (!empty($created_at) && !preg_match($this->rules['created_at'], $created_at)) {
+            throw new ValidationException('created_at = ' . $created_at . ' - uncorrect; ', 400);
+        } 
         $this->created_at = $created_at;
 
         return $this;
@@ -177,9 +202,37 @@ class Item
      *
      * @return  self
      */ 
-    public function setUpdated_at($updated_at)
+    public function setUpdated_at(string $updated_at)
     {
+        if (!empty($updated_at) && !preg_match($this->rules['updated_at'], $updated_at)) {
+            throw new ValidationException('updated_at = ' . $updated_at . ' - uncorrect; ', 400);
+        } 
         $this->updated_at = $updated_at;
+
+        return $this;
+    }
+
+
+    /**
+     * Get the value of deleted_at
+     */ 
+    public function getDeleted_at()
+    {
+        return $this->deleted_at;
+    }
+
+
+    /**
+     * Set the value of deleted_at
+     *
+     * @return  self
+     */ 
+    public function setDeleted_at(?string $deleted_at)
+    {
+        if (!empty($deleted_at) && !preg_match($this->rules['deleted_at'], $deleted_at)) {
+            throw new ValidationException('deleted_at = ' . $deleted_at . ' - uncorrect; ', 400);
+        } 
+        $this->deleted_at = $deleted_at;
 
         return $this;
     }

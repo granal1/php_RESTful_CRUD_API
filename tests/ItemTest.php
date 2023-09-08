@@ -100,8 +100,8 @@ final class ItemTest extends TestCase
         $history = '';
         $item = new Item($id, $name, $phone, $key, $created_at, $updated_at, $history);
 
-        $result = $item->setCreated_at('newDate');
-        $this->assertEquals('newDate', $item->getCreated_at());
+        $result = $item->setCreated_at('2000-01-01 00:00:00');
+        $this->assertEquals('2000-01-01 00:00:00', $item->getCreated_at());
     }
 
 
@@ -116,8 +116,8 @@ final class ItemTest extends TestCase
         $history = '';
         $item = new Item($id, $name, $phone, $key, $created_at, $updated_at, $history);
 
-        $result = $item->setUpdated_at('newDate');
-        $this->assertEquals('newDate', $item->getUpdated_at());
+        $result = $item->setUpdated_at('2000-01-01 00:00:00');
+        $this->assertEquals('2000-01-01 00:00:00', $item->getUpdated_at());
     }
 
 
@@ -127,12 +127,19 @@ final class ItemTest extends TestCase
         $name = 'Name'; 
         $phone = '1(111)111-11-11'; 
         $key = 'key111'; 
-        $created_at = ''; 
-        $updated_at = '';
+        $created_at = '2000-01-01 00:00:00'; 
+        $updated_at = '2000-01-01 00:00:00';
         $history = '';
 
-        $example = '{"id":1,"name":"Name","phone":"1(111)111-11-11","key":"key111","history":null,"created_at":"","updated_at":""}';
-        $item = new Item($id, $name, $phone, $key, $created_at, $updated_at, $history);
+        $example = '{"id":1,"name":"Name","phone":"1(111)111-11-11","key":"key111","history":null,"created_at":"2000-01-01 00:00:00","updated_at":"2000-01-01 00:00:00"}';
+        $item = (new Item())
+                ->setId($id)
+                ->setName($name)
+                ->setPhone($phone)
+                ->setKey($key)
+                ->setCreated_at($created_at)
+                ->setUpdated_at($updated_at)
+                ->setHistory($history);
 
         $result = $item->__toString();
         $this->assertEquals($example, $result);

@@ -7,14 +7,15 @@ use PDO;
 use PDOStatement;
 use Exception;
 use Granal1\RestfulPhp\Exceptions\DBException;
+use Granal1\RestfulPhp\Exceptions\ParametersException;
 
 class ItemApi extends SourceApi
 {
     private $connection;
     private string $responseMessage = '';
 
-    
-    function __construct(PDO $connection = null) 
+
+    function __construct(PDO $connection = null)
     {
         $connection === null ? $connection = Database::getConnection() : $connection;
         $this->connection = $connection;
@@ -23,45 +24,26 @@ class ItemApi extends SourceApi
 
     public function get(array $parameters)
     {
-        $validatedGet = (new Validation())->check($parameters, 'itemGetRules');
+        try {
+            $statement = $this->connection->prepare(
+                'SELECT * FROM item WHERE id = :id AND deleted_at IS NULL'
+            );
+            $statement->execute([
+                ':id' => (int) $parameters['id']
+            ]);
+        } catch (Exception $e) {
+            throw new DBException($e->getMessage(), 503);
+            return;
+        }
 
-        // По секретному ключу '0900070000' можно получить всесь список item
-    //     if ($parameters['id'] === '0900070000') {
-
-    //         try {
-    //             $statement = $this->connection->prepare("SELECT * FROM `item` ORDER BY `id`");
-    //             $statement->execute();
-    //         }catch(Exception $e){
-    //             throw new DBException($e->getMessage(), 503);
-    //             return;
-    //         }
-
-    //         $this->responseMessage .= 'list successful';
-    //         return $this->getItemList($statement);
-    //     }
-    //     else{
-
-            try {
-                $statement = $this->connection->prepare(
-                    'SELECT * FROM item WHERE id = :id'
-                );
-                $statement->execute([
-                    ':id' => (string)$parameters['id'],
-                ]);
-            }catch(Exception $e){
-                throw new DBException($e->getMessage(), 503);
-                return;
-            }
-
-            $this->responseMessage .= 'successful';
-            return $this->getItem($statement);
-    //     }
+        $this->responseMessage .= 'successful';
+        return $this->getItemFromDB($statement);
     }
 
 
     public function post(array $parameters)
     {
-        $validatedPost = (new Validation())->check($parameters, 'itemPostRules');
+        $item = $this->getItemFromRequest($parameters);
 
         try {
             $statement = $this->connection->prepare(
@@ -74,13 +56,13 @@ class ItemApi extends SourceApi
                     `updated_at` = :updated_at'
             );
             $statement->execute([
-                ':name' => $parameters['name'],
-                ':phone' => $parameters['phone'],
-                ':key' => $parameters['key'],
+                ':name' => $item->getName(),
+                ':phone' => $item->getPhone(),
+                ':key' => $item->getKey(),
                 ':created_at' => date('Y-m-d H:i:s'),
                 ':updated_at' => date('Y-m-d H:i:s')
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             throw new DBException($e->getMessage(), 503);
             return;
         }
@@ -91,56 +73,34 @@ class ItemApi extends SourceApi
     }
 
 
-    public function delete(array $parameters)
-    {
-        $validatedDelete = (new Validation())->check($parameters, 'itemDeleteRules');
-        if ($this->findId($parameters)) {
-            try {
-                $statement = $this->connection->prepare(
-                    'DELETE FROM item WHERE id = :id'
-                );
-                $statement->execute([
-                    ':id' => (int)$parameters['id']
-                ]);
-            }catch(Exception $e){
-                throw new DBException($e->getMessage(), 503);
-                return;
-            }
-        }
-        else {
-            throw new ItemException('Item not found', 404);
-        }
-
-        if (!$this->findId($parameters)) {
-            $this->responseMessage .= 'deleted successful';
-            return (string)NULL;
-        }
-        else {
-            throw new ItemException('Conflict (delete failed)', 409);
-        }
-    }
-
-
     public function update(array $parameters)
     {
-        $validatedUpdate = (new Validation())->check($parameters, 'itemUpdateRules');
-        $current = json_decode($this->get($parameters), true); 
+        $currentItem = $this->get($parameters);
+        $newItem = $this->getItemFromRequest($parameters);
 
-        ($current['history']) ?: $current['history'] = [];
+        $newHistory = [];
+        $properties = ['name', 'phone', 'key'];
 
-        $newHistory = array(
-            'name' => $current['name'], 
-            'phone' => $current['phone'], 
-            'key' => $current['key'], 
-            'updated_at' => $current['updated_at']
-        );
+        foreach ($properties as $property) {
+            $getProperty = 'get' . ucfirst($property);
+            $setProperty = 'set' . ucfirst($property);
+            $newValue = $newItem->$getProperty();
+            $currentValue = $currentItem->$getProperty();
 
-        array_push($current['history'], $newHistory);
-        $current['history'] = json_encode($current['history']);
-
-        foreach ($current as $key => $value) {
-            $newData[$key] = (!array_key_exists($key, $parameters) || $parameters[$key] === $value) ? $value : $parameters[$key];
+            if (!empty($newValue) && $newValue !== $currentValue) {
+                $newHistory[$property] = $currentValue;
+                $currentItem->$setProperty($newValue);
+            }
         }
+
+        if (empty($newHistory)) {
+            throw new ItemException('New and old values are the same', 400);
+        }
+
+        $currentHistory = ($currentItem->getHistory()) ? json_decode($currentItem->getHistory(), true) : [];
+        $newHistory['updated_at'] = $currentItem->getUpdated_at();
+        array_push($currentHistory, $newHistory);
+        $currentItem->setHistory(json_encode($currentHistory));
 
         try {
             $statement = $this->connection->prepare(
@@ -155,92 +115,96 @@ class ItemApi extends SourceApi
                 WHERE `id` = :id'
             );
             $statement->execute([
-                ':id' => $newData['id'],
-                ':name' => $newData['name'],
-                ':phone' => $newData['phone'],
-                ':key' => $newData['key'],
-                ':history' => $newData['history'],
-                ':created_at' => $newData['created_at'],
+                ':id' => $currentItem->getId(),
+                ':name' => $currentItem->getName(),
+                ':phone' => $currentItem->getPhone(),
+                ':key' => $currentItem->getKey(),
+                ':history' => $currentItem->getHistory(),
+                ':created_at' => $currentItem->getCreated_at(),
                 ':updated_at' => date('Y-m-d H:i:s')
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             throw new DBException($e->getMessage(), 503);
             return;
         }
 
         $this->responseMessage = 'update ';
-        return $this->get($newData);
+        $updated['id'] = $currentItem->getId();
+        return $this->get($updated);
     }
 
 
-    private function findId(array $parameters): ?string
+    public function delete(array $parameters)
     {
-        $validatedGet = (new Validation())->check($parameters, 'itemGetRules');
+        $currentItem = $this->get($parameters);
+        $currentItem->setDeleted_at(date('Y-m-d H:i:s'));
 
         try {
-        $statement = $this->connection->prepare(
-            'SELECT id FROM item WHERE id = :id'
-        );
-        $statement->execute([
-            ':id' => (string)$parameters['id'],
-        ]);
-        }catch(Exception $e){
+            $statement = $this->connection->prepare(
+                'UPDATE `item` 
+                SET 
+                    `deleted_at` = :deleted_at
+                WHERE `id` = :id'
+            );
+            $statement->execute([
+                ':id' => $currentItem->getId(),
+                ':deleted_at' => $currentItem->getDeleted_at()
+            ]);
+        } catch (Exception $e) {
             throw new DBException($e->getMessage(), 503);
-            return null;
+            return;
         }
 
-        $exist =  $statement->fetch(PDO::FETCH_ASSOC);
-        return $exist['id'] ?? null;
+        $this->responseMessage .= ' deleted';
+        return (string)NULL;
+    }
+
+
+    private function getItemFromRequest($parameters): Item
+    {
+        $item = new Item();
+        $method = null;
+
+        foreach ($parameters as $parameter => $value) {
+            if (
+                $parameter === 'history' ||
+                $parameter === 'created_at' ||
+                $parameter === 'updated_at' ||
+                $parameter === 'deleted_at'
+            ) {
+                throw new ParametersException('Parameter ' . $parameter . ' not allowed', 400);
+            }
+            $method = 'set' . $parameter;
+            method_exists($item, $method) ?
+                $item->$method($value) :
+                throw new ParametersException('Parameter ' . $parameter . ' not allowed', 400);
+        }
+
+        return $item;
+    }
+
+
+    private function getItemFromDB(PDOStatement $statement): Item
+    {
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        if (empty($result)) {
+            throw new ItemException('Item not found', 404);
+        }
+
+        $item = new Item();
+        $method = null;
+
+        foreach ($result as $key => $value) {
+            $method = 'set' . $key;
+            $item->$method($value);
+        }
+
+        return $item;
     }
 
 
     public function responseMessage()
     {
         return $this->responseMessage;
-    }
-
-    
-    private function getItem(PDOStatement $statement): string
-    {
-        $result = $statement->fetch(PDO::FETCH_ASSOC);
-        if (empty($result)){
-            throw new ItemException('Item not found', 404);
-        }
-
-        $item = new Item(
-        $result['id'],
-        $result['name'], 
-        $result['phone'],
-        $result['key'],
-        $result['created_at'],
-        $result['updated_at'],
-        $result['history']
-        );
-
-        return (string)$item;
-    }
-
-
-    private function getItemList(PDOStatement $statement): string
-    {
-        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
-        if (empty($result)){
-            throw new ItemException('Item not found', 404);
-        }
-        
-        foreach ($result as $row) {
-            $item = new Item(
-                $row['id'],
-                $row['name'], 
-                $row['phone'],
-                $row['key'],
-                $row['created_at'],
-                $row['updated_at'],
-                $row['history']
-            );
-            $items[] = json_decode((string)$item);
-        }
-
-        return json_encode($items);
     }
 }

@@ -1,0 +1,5 @@
+/vendor/
+public/phpmyadmin
+/.phpunit.cache/
+phpunit.xml
+tests/coverage_report/

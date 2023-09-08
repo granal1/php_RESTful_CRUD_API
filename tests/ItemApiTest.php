@@ -7,7 +7,6 @@ use Granal1\RestfulPhp\Exceptions\DBException;
 /**
  * @covers Granal1\RestfulPhp\api\ItemApi
  * @uses Granal1\RestfulPhp\api\Item
- * @uses Granal1\RestfulPhp\api\Validation
  * @uses Granal1\RestfulPhp\api\Database
  * @uses Granal1\RestfulPhp\api\ItemApi
  * @uses Granal1\RestfulPhp\api\SourceApi
@@ -44,8 +43,9 @@ final class ItemApiTest extends TestCase
             `history` json DEFAULT NULL,
             `created_at` timestamp NULL DEFAULT NULL,
             `updated_at` timestamp NULL DEFAULT NULL,
+            `deleted_at` timestamp NULL DEFAULT NULL,
             PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+          ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     }
 
 
@@ -103,32 +103,6 @@ final class ItemApiTest extends TestCase
 
         $this->assertSame($example, $result);
         $this->assertSame('successful', $this->itemApi->responseMessage());
-    }
-
-    public function testItemApiGetMethodReturnListData(): void
-    {
-        //Тест отмечен как пропущенный, т.к. возможность получения списка закомментирована
-        $this->markTestSkipped('Тест получения списка сущностей пропущен');
-        
-
-        $id = ['id' => '0900070000'];
-        $example = [
-            [
-                'id' => 1,
-                'name' => 'mrFirst',
-                'phone' => '1(111)111-11-11',
-                'key' => 'key111',
-                'history' => null,
-                'created_at' => '2000-01-01 00:00:00', 
-                'updated_at' => '2000-01-01 00:00:00'
-            ]
-        ];
-
-        $result = $this->itemApi->get($id);
-        $result = json_decode($result, true);
-
-        $this->assertSame($example, $result);
-        $this->assertSame('list successful', $this->itemApi->responseMessage());
     }
 
 
@@ -193,7 +167,7 @@ final class ItemApiTest extends TestCase
         $result = $this->itemApi->delete($this->parameters);
 
         $this->assertSame($example, $result);
-        $this->assertSame('deleted successful', $this->itemApi->responseMessage());
+        $this->assertSame('successful deleted', $this->itemApi->responseMessage());
     }
 
     public function testItemApiDeletionFailedItemNotFound()
