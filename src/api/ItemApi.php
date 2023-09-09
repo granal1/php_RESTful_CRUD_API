@@ -24,6 +24,7 @@ class ItemApi extends SourceApi
 
     public function get(array $parameters)
     {
+        $parameters['id'] = ($parameters['id']) ?? $parameters['id'] = 0;
         try {
             $statement = $this->connection->prepare(
                 'SELECT * FROM item WHERE id = :id AND deleted_at IS NULL'
