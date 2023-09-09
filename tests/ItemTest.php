@@ -12,112 +12,79 @@ final class ItemTest extends TestCase
     public function testItemSetAndGetId(): void
     {
         $id = 1; 
-        $name = ''; 
-        $phone = ''; 
-        $key = ''; 
-        $created_at = ''; 
-        $updated_at = '';
-        $history = '';
-        $item = new Item($id, $name, $phone, $key, $created_at, $updated_at, $history);
+        $item = new Item();
 
-        $result = $item->setId(2);
-        $this->assertEquals(2, $item->getId());
+        $result = $item->setId($id);
+        $this->assertEquals($id, $item->getId());
     }
 
 
     public function testItemSetAndGetName(): void
     {
-        $id = '1'; 
-        $name = 'oldName'; 
-        $phone = ''; 
-        $key = ''; 
-        $created_at = ''; 
-        $updated_at = '';
-        $history = '';
-        $item = new Item($id, $name, $phone, $key, $created_at, $updated_at, $history);
+        $name = 'Name'; 
+        $item = new Item();
 
-        $result = $item->setName('newName');
-        $this->assertEquals('newName', $item->getName());
+        $result = $item->setName($name);
+        $this->assertEquals($name, $item->getName());
     }
 
 
     public function testItemSetAndGetPhone(): void
     {
-        $id = '1'; 
-        $name = ''; 
-        $phone = ''; 
-        $key = ''; 
-        $created_at = ''; 
-        $updated_at = '';
-        $history = '';
-        $item = new Item($id, $name, $phone, $key, $created_at, $updated_at, $history);
+        $phone = '111-11-11'; 
+        $item = new Item();
 
-        $result = $item->setPhone('111-11-11');
-        $this->assertEquals('111-11-11', $item->getPhone());
+        $result = $item->setPhone($phone);
+        $this->assertEquals($phone, $item->getPhone());
     }
 
 
     public function testItemSetAndGetKey(): void
     {
-        $id = '1'; 
-        $name = ''; 
-        $phone = ''; 
-        $key = ''; 
-        $created_at = ''; 
-        $updated_at = '';
-        $history = '';
-        $item = new Item($id, $name, $phone, $key, $created_at, $updated_at, $history);
+        $key = 'newKey'; 
+        $item = new Item();
 
-        $result = $item->setKey('newKey');
-        $this->assertEquals('newKey', $item->getKey());
+        $result = $item->setKey($key);
+        $this->assertEquals($key, $item->getKey());
     }
 
 
     public function testItemSetAndGetHistory(): void
     {
-        $id = '1'; 
-        $name = ''; 
-        $phone = ''; 
-        $key = ''; 
-        $created_at = ''; 
-        $updated_at = '';
-        $history = '';
-        $item = new Item($id, $name, $phone, $key, $created_at, $updated_at, $history);
+        $history = 'newHistory';
+        $item = new Item();
 
-        $result = $item->setHistory('newHistory');
-        $this->assertEquals('newHistory', $item->getHistory());
+        $result = $item->setHistory($history);
+        $this->assertEquals($history, $item->getHistory());
     }
 
 
     public function testItemSetAndGetCreatedAt(): void
     {
-        $id = '1'; 
-        $name = ''; 
-        $phone = ''; 
-        $key = ''; 
-        $created_at = ''; 
-        $updated_at = '';
-        $history = '';
-        $item = new Item($id, $name, $phone, $key, $created_at, $updated_at, $history);
+        $date = '2000-01-01 00:00:00';
+        $item = new Item();
 
-        $result = $item->setCreated_at('2000-01-01 00:00:00');
-        $this->assertEquals('2000-01-01 00:00:00', $item->getCreated_at());
+        $result = $item->setCreated_at($date);
+        $this->assertEquals($date, $item->getCreated_at());
     }
 
 
     public function testItemSetAndGetUpdatedAt(): void
     {
-        $id = '1'; 
-        $name = ''; 
-        $phone = ''; 
-        $key = ''; 
-        $created_at = ''; 
-        $updated_at = '';
-        $history = '';
-        $item = new Item($id, $name, $phone, $key, $created_at, $updated_at, $history);
+        $date = '2000-01-01 00:00:00';
+        $item = new Item();
 
-        $result = $item->setUpdated_at('2000-01-01 00:00:00');
-        $this->assertEquals('2000-01-01 00:00:00', $item->getUpdated_at());
+        $result = $item->setUpdated_at($date);
+        $this->assertEquals($date, $item->getUpdated_at());
+    }
+
+    public function testItemSetAndGetDeletedAt(): void
+    {
+        $date = '2000-01-01 00:00:00';
+        $item = new Item();
+
+        $result = $item->setDeleted_at($date);
+        $this->assertEquals($date, $item->getDeleted_at());
     }
 
 
@@ -141,7 +108,7 @@ final class ItemTest extends TestCase
                 ->setUpdated_at($updated_at)
                 ->setHistory($history);
 
-        $result = $item->__toString();
+        $result = (string) $item;
         $this->assertEquals($example, $result);
     }
 }

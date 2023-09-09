@@ -22,7 +22,7 @@ final class DatabaseTest extends TestCase
         $result = Database::getConnection('wrong_config');
     }
 
-    public function testDatabaseConfifWrong(): void
+    public function testDatabaseConfigWrong(): void
     {
         $this->expectExceptionMessage('DB connection error');
         $filename = dirname(__DIR__, 1) . '/tests/DatabaseWrongExampleIni.ini';

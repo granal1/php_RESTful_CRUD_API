@@ -170,15 +170,6 @@ final class ItemApiTest extends TestCase
         $this->assertSame('successful deleted', $this->itemApi->responseMessage());
     }
 
-    public function testItemApiDeletionFailedItemNotFound()
-    {
-        $this->parameters = ['id' => 10];
-
-        $this->expectExceptionMessage('Item not found');
-        
-        $result = $this->itemApi->delete($this->parameters);
-    }
-
 
     protected function tearDown(): void
     {

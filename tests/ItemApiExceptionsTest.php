@@ -68,12 +68,34 @@ final class ItemApiExceptionsTest extends TestCase
     public function testItemApiPostMethodFailed(): void
     {
         $parameters = [
-            'name' => 'mrSecond',
-            'phone' => '2(222)222-22-22',
-            'key' => 'key222',
+            'name' => 'mrSecond'
         ];
         $this->expectExceptionMessage(
             "SQLSTATE[42S02]: Base table or view not found: 1146 Table 'php_restful_api_for_tests.item' doesn't exist"
+        );
+        $result = $this->itemApi->post($parameters);
+    }
+
+
+    public function testItemApiItemFromRequestWrongParameter(): void
+    {
+        $parameters = [
+            'wrong_parameter' => 'wrong'
+        ];
+        $this->expectExceptionMessage(
+            "Parameter wrong_parameter not allowed"
+        );
+        $result = $this->itemApi->post($parameters);
+    }
+
+
+    public function testItemApiItemFromRequestNotAllowedParameter(): void
+    {
+        $parameters = [
+            'history' => 'not allowed'
+        ];
+        $this->expectExceptionMessage(
+            "Parameter history not allowed"
         );
         $result = $this->itemApi->post($parameters);
     }
@@ -113,12 +135,68 @@ final class ItemApiExceptionsTest extends TestCase
         $result = $this->itemApi->update($parameters);
     }
 
+    
+    public function testItemApiUpdateMethodFailedSameData(): void
+    {
+        self::$pdo->query("CREATE TABLE `item` (
+            `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+            `name` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `key` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
+            `history` json DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT NULL,
+            `updated_at` timestamp NULL DEFAULT NULL,
+            `deleted_at` timestamp NULL DEFAULT NULL,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+        self::$pdo->query(
+            'INSERT INTO `item`
+            SET
+                `name` = "mrFirst",
+                `phone` = "1(111)111-11-11",
+                `key` = "key111",
+                `created_at` = date("2000-01-01 00:00:00"), 
+                `updated_at` = date("2000-01-01 00:00:00")'
+        );
+
+        $parameters = [
+            'id' => 1,
+            'name' => 'mrFirst',
+            'phone' => '1(111)111-11-11',
+            'key' => 'key111',
+        ];
+        $this->expectExceptionMessage("New and old values are the same");
+        $result = $this->itemApi->update($parameters);
+    }
+
 
     public function testItemApiDeleteMethodFailed(): void
     {
+        self::$pdo->query("CREATE TABLE `item` (
+            `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+            `name` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `key` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
+            `history` json DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT NULL,
+            `updated_at` timestamp NULL DEFAULT NULL,
+            `deleted_at` int NULL DEFAULT NULL,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+        self::$pdo->query(
+            'INSERT INTO `item`
+            SET
+                `name` = "mrFirst",
+                `key` = "key111",
+                `created_at` = date("2000-01-01 00:00:00"), 
+                `updated_at` = date("2000-01-01 00:00:00")'
+        );
+
         $id = ['id' => '1'];
         $this->expectExceptionMessage(
-            "SQLSTATE[42S02]: Base table or view not found: 1146 Table 'php_restful_api_for_tests.item' doesn't exist"
+            "SQLSTATE[01000]: Warning: 1265 Data truncated for column 'deleted_at' at row 1"
         );
         $result = $this->itemApi->delete($id);
     }
